@@ -1,0 +1,26 @@
+name: Swing Trade Alertas
+
+on:
+  schedule:
+    - cron: '0 22 * * 1-5'  # Lunes a viernes a las 22:00 hora española (21:00 UTC)
+  workflow_dispatch:          # Permite ejecutarlo manualmente también
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install yfinance pandas requests
+
+      - name: Ejecutar scanner
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: python swing_alert.py
