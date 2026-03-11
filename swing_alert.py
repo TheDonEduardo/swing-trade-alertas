@@ -9,8 +9,7 @@ import os
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
 
-TICKERS = ["RCAT", "ONDS", "QUBT", "UMAC", "HUMA", "IREN"]
-
+TICKERS = ["ONDS", "HUMA", "IREN", "RCAT", "QUBT", "UMAC", "ENVX", "SLDP", "SIDU", "RXRX", "RGTI", "LWLG", "SKYT", "AEHR", "SOUN", "RKLB", "MELI", "ASTS", "EVER", "IONQ", "AMPX"]
 # ==========================================
 # FUNCIÓN: ENVIAR MENSAJE TELEGRAM
 # ==========================================
