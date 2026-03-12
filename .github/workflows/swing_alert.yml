@@ -2,8 +2,8 @@ name: Swing Trade Alertas
 
 on:
   schedule:
-    - cron: '0 22 * * 1-5'  # Lunes a viernes a las 22:00 hora española (21:00 UTC)
-  workflow_dispatch:          # Permite ejecutarlo manualmente también
+    - cron: '0 21 * * 1-5'
+  workflow_dispatch:
 
 jobs:
   scan:
