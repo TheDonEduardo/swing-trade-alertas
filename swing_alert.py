@@ -6,7 +6,9 @@ import os
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
 
-TICKERS = ["ONDS", "HUMA", "IREN", "RCAT", "QUBT", "UMAC", "ENVX", "SLDP", "SIDU", "RXRX", "RGTI", "LWLG", "SKYT", "AEHR", "SOUN", "RKLB", "IONQ", "AMPX", "ASTS", "EVER", "MELI", "TMDX", "SMR", "OKLO", "PL", "SOFI", "HIMS", "SYM", "RDW", "NU", "CRSP", "QS", "ACHR", "PATH", "NBIS", "UPST", "MARA", "TEM", "PANW", "TTD", "DLO", "OSCR", "ALAB", "BLDP", "NIO", "CIFR", "MU", "RBRK", "AMD", "CROX", "CPRX", "VAL", "LC", "RIOT", "ABCL", "ABAT", "CLOV", "BABA", "SATL", "RANI", "NVO", "MRNA", "XPEV", "KRKNF", "PNG", "PLMR", "LMND", "CRDO", "AXTI", "HOOD", "ZETA", "META", "FLNC", "EOSE", "BE", "TSM", "ASML", "QBTS", "MSFT", "AAPL", "NVDA", "GOOGL", "AMZN", "AVGO", "TSLA", "COST", "NFLX", "PEP", "AZN", "TMUS", "CSCO", "QCOM", "INTU", "ADBE", "AMAT", "ASML.AS", "MC.PA", "SAP.DE", "AZN.L", "NOVN.SW", "SHEL.L", "ROG.SW", "OR.PA", "RMS.PA", "SIE.DE", "TTE.PA", "ITX.MC", "HSBA.L", "ULVR.L", "DTE.DE", "SAN.PA", "SU.PA", "ALV.DE", "AIR.PA", "RACE.MI", "AXSM", "TVTX", "BBAI", "AMLX", "NUVL", "ACMR", "XENE"]
+TICKERS = ["ONDS", "HUMA", "IREN", "RCAT", "QUBT", "UMAC", "ENVX", "SLDP", "SIDU", "RXRX", "RGTI", "LWLG", "SKYT", "AEHR", "SOUN", "RKLB", "IONQ", "AMPX", "ASTS", "EVER", "MELI", "TMDX", "SMR", "OKLO", "PL", "SOFI", "HIMS", "SYM", "RDW", "NU", "CRSP", "QS", "ACHR", "PATH", "NBIS", "UPST", "MARA", "TEM", "PANW", "TTD", "DLO", "OSCR", "ALAB", "BLDP", "NIO", "CIFR", "MU", "RBRK", "AMD", "CROX", "CPRX", "VAL", "LC", "RIOT", "ABCL", "ABAT", "CLOV", "BABA", "SATL", "RANI", "NVO", "MRNA", "XPEV", "KRKNF", "PNG", "PLMR", "LMND", "CRDO", "AXTI", "HOOD", "ZETA", "META", "FLNC", "EOSE", "BE", "TSM", "ASML", "QBTS", "MSFT", "AAPL", "NVDA", "GOOGL", "AMZN", "AVGO", "TSLA", "COST", "NFLX", "PEP", "AZN", "TMUS", "CSCO", "QCOM", "INTU", "ADBE", "AMAT", "ASML.AS", "MC.PA", "SAP.DE", "AZN.L", "NOVN.SW", "SHEL.L", "ROG.SW", "OR.PA", "RMS.PA", "SIE.DE", "TTE.PA", "ITX.MC", "HSBA.L", "ULVR.L", "DTE.DE", "SAN.PA", "SU.PA", "ALV.DE", "AIR.PA", "RACE.MI", "AXSM", "TVTX", "BBAI", "AMLX", "NUVL", "ACMR", "XENE", "AAOI", "OPEN", "UBER", "RDDT", "ORCL", "VKTX", "AVAV", "PLTR", "SMCI", "ENPH", "RCKT", "DNLI", "MNMD", "LLY", "WULF"]
+
+TICKERS = list(dict.fromkeys(TICKERS))
 
 def send_telegram(msg):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -45,7 +47,13 @@ def check_signal(ticker):
         print(f"Error en {ticker}: {e}")
         return None
 
-signals = [r for r in [check_signal(t) for t in TICKERS] if r]
+seen = set()
+signals = []
+for t in TICKERS:
+    r = check_signal(t)
+    if r and r["ticker"] not in seen:
+        seen.add(r["ticker"])
+        signals.append(r)
 
 if signals:
     for s in signals:
