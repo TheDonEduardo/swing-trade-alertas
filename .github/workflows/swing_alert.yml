@@ -2,7 +2,7 @@ name: Swing Trade Alertas
 
 on:
   schedule:
-    - cron: '0 21 * * 1-5'
+    - cron: '1 21 * * 1-5'
   workflow_dispatch:
 
 jobs:
