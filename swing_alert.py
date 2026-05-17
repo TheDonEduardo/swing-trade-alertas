@@ -6,7 +6,6 @@ import os
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
 
-# Base original combinada con los nuevos tickers de la watchlist algorítmica transnacional
 TICKERS = [
     # --- TICKERS ORIGINALES ---
     "ONDS", "HUMA", "IREN", "RCAT", "QUBT", "UMAC", "ENVX", "SLDP", "SIDU", "RXRX", 
@@ -86,8 +85,7 @@ def check_swing_v4(ticker, df):
             stop = c - (atr_v * 1.5)
             return {"ticker": ticker, "precio": round(c, 2), "rsi": round(rsi_v, 1), "vol_rel": round(vr, 2), "stop": round(stop, 2), "tp": round(c + (c - stop) * 2, 2), "sistema": "SwingV4 - Rombo Verde"}
         return None
-    except Exception as e:
-        print(f"[SwingV4] Error en {ticker}: {e}")
+    except Exception:
         return None
 
 def check_elliott_v15(ticker, df):
@@ -126,36 +124,85 @@ def check_elliott_v15(ticker, df):
             stop = c - (atr_v * 2.5)
             return {"ticker": ticker, "precio": round(c, 2), "ao": round(ao_v, 4), "vol_rel": round(vr, 2), "stop": round(stop, 2), "tp": round(c + (c - stop) * 2, 2), "sistema": "EWE V15 - Onda 3"}
         return None
-    except Exception as e:
-        print(f"[EWE V15] Error en {ticker}: {e}")
+    except Exception:
         return None
 
-seen_swing = set()
-seen_elliott = set()
-signals_swing = []
-signals_elliott = []
-
-for t in TICKERS:
-    df = get_data(t)
-    if df is None:
-        continue
-    
-    r1 = check_swing_v4(t, df)
-    if r1 and r1["ticker"] not in seen_swing:
-        seen_swing.add(r1["ticker"])
-        signals_swing.append(r1)
+def check_indicio_tendencia(ticker, df):
+    """
+    Proxy ligero basado en los filtros de 'Machine Learning: Lorentzian Classification'.
+    Evalúa tendencia secular estricta (EMA200, SMA200) y busca aceleración de momentum (cruce rápido).
+    """
+    try:
+        close = df["Close"].squeeze()
         
-    r2 = check_elliott_v15(t, df)
-    if r2 and r2["ticker"] not in seen_elliott:
-        seen_elliott.add(r2["ticker"])
-        signals_elliott.append(r2)
+        ema200 = close.ewm(span=200, adjust=False).mean()
+        sma200 = close.rolling(200).mean()
+        
+        # Proxy del Kernel Regresión (Momentum Suavizado)
+        sma10 = close.rolling(10).mean()
+        sma21 = close.rolling(21).mean()
+        
+        c = float(close.iloc[-1])
+        e200 = float(ema200.iloc[-1])
+        s200 = float(sma200.iloc[-1])
+        
+        k_fast = float(sma10.iloc[-1])
+        k_slow = float(sma21.iloc[-1])
+        k_fast_1 = float(sma10.iloc[-2])
+        k_slow_1 = float(sma21.iloc[-2])
+        
+        # Filtros extraídos del Pine Script:
+        # isBuySignal = signal == direction.long and isEmaUptrend and isSmaUptrend
+        tendencia_alcista = (c > e200) and (c > s200)
+        
+        # Alerta alcista (Cruce de Kernel / Momentum)
+        cruce_alcista = (k_fast > k_slow) and (k_fast_1 <= k_slow_1)
+        
+        if tendencia_alcista and cruce_alcista:
+            return {"ticker": ticker, "precio": round(c, 2), "sistema": "Indicio de Tendencia (Filtro)"}
+        return None
+    except Exception:
+        return None
 
-total = len(signals_swing) + len(signals_elliott)
+if __name__ == "__main__":
+    seen_swing = set()
+    seen_elliott = set()
+    seen_indicio = set()
+    signals_swing = []
+    signals_elliott = []
+    signals_indicio = []
 
-if total > 0:
-    for s in signals_swing:
-        send_telegram(f"<b>COMPRA - Rombo Verde [SwingV4]</b>\n---\nTicker: <b>{s['ticker']}</b>\nPrecio: ${s['precio']}\nRSI: {s['rsi']}\nVol Relativo: {s['vol_rel']}x\nStop: ${s['stop']}\nTP (2R): ${s['tp']}\n---\nConfirmar en chart antes de entrar")
-    for s in signals_elliott:
-        send_telegram(f"<b>COMPRA - Onda 3 [EWE V15]</b>\n---\nTicker: <b>{s['ticker']}</b>\nPrecio: ${s['precio']}\nAO: {s['ao']}\nVol Relativo: {s['vol_rel']}x\nStop: ${s['stop']}\nTP (2R): ${s['tp']}\n---\nConfirmar en chart antes de entrar")
-else:
-    send_telegram("<b>Swing Trade Pro V4 + EWE V15</b>\nScan completado - Sin señales activas hoy.")
+    print("Iniciando escaneo masivo (3 Estrategias)...")
+    for t in TICKERS:
+        df = get_data(t)
+        if df is None:
+            continue
+        
+        r1 = check_swing_v4(t, df)
+        if r1 and r1["ticker"] not in seen_swing:
+            seen_swing.add(r1["ticker"])
+            signals_swing.append(r1)
+            
+        r2 = check_elliott_v15(t, df)
+        if r2 and r2["ticker"] not in seen_elliott:
+            seen_elliott.add(r2["ticker"])
+            signals_elliott.append(r2)
+            
+        r3 = check_indicio_tendencia(t, df)
+        if r3 and r3["ticker"] not in seen_indicio:
+            seen_indicio.add(r3["ticker"])
+            signals_indicio.append(r3)
+
+    total = len(signals_swing) + len(signals_elliott) + len(signals_indicio)
+
+    if total > 0:
+        send_telegram("🚀 <b>ALERTA DE SISTEMAS ACTIVOS</b> 🚀")
+        
+        for s in signals_swing:
+            send_telegram(f"<b>COMPRA - Rombo Verde [SwingV4]</b>\n---\nTicker: <b>{s['ticker']}</b>\nPrecio: ${s['precio']}\nRSI: {s['rsi']}\nVol Relativo: {s['vol_rel']}x\nStop: ${s['stop']}\nTP (2R): ${s['tp']}\n---")
+        for s in signals_elliott:
+            send_telegram(f"<b>COMPRA - Onda 3 [EWE V15]</b>\n---\nTicker: <b>{s['ticker']}</b>\nPrecio: ${s['precio']}\nAO: {s['ao']}\nVol Relativo: {s['vol_rel']}x\nStop: ${s['stop']}\nTP (2R): ${s['tp']}\n---")
+        for s in signals_indicio:
+            send_telegram(f"<b>COMPRA - Indicio Tendencia</b>\n---\nTicker: <b>{s['ticker']}</b>\nPrecio: ${s['precio']}\nSeñal: Inicio Aceleración (Proxy Kernel)\n---")
+    else:
+        send_telegram("<b>Reporte Técnico 360º</b>\nEscaneo completado. Sin cruces óptimos hoy.")
