@@ -1,8 +1,9 @@
-name: Swing Trade Alertas
+name: Scanner Multi-Estrategia
 
 on:
   schedule:
-    - cron: '1 21 * * 1-5'
+    # 20:05 UTC -> 22:05 CEST (España Verano)
+    - cron: '5 20 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -19,8 +20,9 @@ jobs:
       - name: Instalar dependencias
         run: pip install yfinance pandas requests
 
-      - name: Ejecutar scanner
+      - name: Ejecutar Scanner
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-        run: python swing_alert.py
+        # Asegúrate de que el nombre del script coincida con cómo lo guardaste
+        run: python rombo_masivo.py
