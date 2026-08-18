@@ -26,22 +26,40 @@ TICKERS = [
     "PAYC", "CDLX", "MTSI", "POET", "LASR", "IT", "EPAM", "DOCU", "WDAY", "HRI", 
     "MIDD", "BWMX", "BLD", "AEO", "FBIN", "FMC", "AOS", "ARE",
     
-    # --- NUEVOS TICKERS: SAAS E IA ---
+    # --- SAAS E IA ---
     "SNOW", "MNDY", "TWLO", "SHOP", "SAP", 
     
-    # --- NUEVOS TICKERS: SEMICONDUCTORES JAPÓN (.T) Y EUROPA ---
+    # --- SEMICONDUCTORES JAPÓN (.T) Y EUROPA ---
     "285A.T", "8035.T", "6857.T", "6146.T", "6723.T", "6920.T", "7735.T", "6525.T",
     "ASM.AS", "BESI.AS", "STMPA.PA",
     
-    # --- NUEVOS TICKERS: BIOTECNOLOGÍA Y MEDTECH ---
+    # --- BIOTECNOLOGÍA Y MEDTECH ---
     "BEAM", "INTLA", "NTLA", "CLLS", "ADPT", "VRTX", "SANA", "CRBU",
     "LONN.SW", "BANB.SW", "NOVO-B.CO", "ARGX.BR", "PME.AX", "ARX.AX",
     
-    # --- NUEVOS TICKERS: DEEP TECH (CUÁNTICA Y AEROESPACIAL) ---
+    # --- DEEP TECH (CUÁNTICA Y AEROESPACIAL) ---
     "AXE.AX", "TDG", "KTOS", 
     
-    # --- NUEVOS TICKERS: APAC, AUSTRALIA Y ADRS ---
-    "XRO.AX", "TNE.AX", "WTC.AX", "TCEHY", "JD"
+    # --- APAC, AUSTRALIA Y ADRS ---
+    "XRO.AX", "TNE.AX", "WTC.AX", "TCEHY", "JD",
+
+    # --- AI INFRA / SEMIS EMERGENTES ---
+    "QUIK", "AIP", "INOD", "MPTI", "INFQ",
+
+    # --- DEFENSA / ESPACIO ---
+    "TXT", "DPRO", "KRMN", "AIRO", "JOBY", "LUNR", "MDA", "FLY", "HSAI",
+
+    # --- BIOTECH CATALIZADORES 2026 ---
+    "SYRE", "SPRB", "TLX", "FLGT", "GLSI", "IMRX", "GOVX", "CODX", "RDHL", "IONS", "VRDN",
+
+    # --- NUCLEAR / SMR ---
+    "OUST", "NNE", "LTBR", "ASPI", "URG", "UROY", "BWXT",
+
+    # --- CYBERSECURITY ---
+    "QLYS", "FTNT", "TENB", "SAIL", "CYBR", "RPD",
+
+    # --- CRYPTO / BITCOIN TREASURY ---
+    "XXI", "COIN", "ORBS", "BSTR"
 ]
 
 # Eliminar duplicados manteniendo el orden
@@ -138,7 +156,6 @@ def check_indicio_tendencia(ticker, df):
         ema200 = close.ewm(span=200, adjust=False).mean()
         sma200 = close.rolling(200).mean()
         
-        # Proxy del Kernel Regresión (Momentum Suavizado)
         sma10 = close.rolling(10).mean()
         sma21 = close.rolling(21).mean()
         
@@ -151,11 +168,7 @@ def check_indicio_tendencia(ticker, df):
         k_fast_1 = float(sma10.iloc[-2])
         k_slow_1 = float(sma21.iloc[-2])
         
-        # Filtros extraídos del Pine Script:
-        # isBuySignal = signal == direction.long and isEmaUptrend and isSmaUptrend
         tendencia_alcista = (c > e200) and (c > s200)
-        
-        # Alerta alcista (Cruce de Kernel / Momentum)
         cruce_alcista = (k_fast > k_slow) and (k_fast_1 <= k_slow_1)
         
         if tendencia_alcista and cruce_alcista:
